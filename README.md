@@ -3,9 +3,7 @@
 
 Convenience wrappers for command-line invocation of Outlook.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ryanavella/outlook-exe/blob/master/LICENSE-MIT) [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](https://github.com/ryanavella/outlook-exe/blob/master/LICENSE-UNLICENSE)
-
-Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org).
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ryanavella/outlook-exe/blob/master/LICENSE-MIT) [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](https://github.com/ryanavella/outlook-exe/blob/master/LICENSE-UNLICENSE) [![crates.io](https://img.shields.io/crates/v/outlook-exe.svg?colorB=319e8c)](https://crates.io/crates/outlook-exe) [![docs.rs](https://img.shields.io/badge/docs.rs-outlook--exe-yellowgreen)](https://docs.rs/outlook-exe)
 
 ## Example
 

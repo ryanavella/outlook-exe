@@ -21,10 +21,10 @@ use std::{borrow::Cow, io, process};
 #[macro_use]
 extern crate lazy_static;
 
-use winreg::{enums::HKEY_LOCAL_MACHINE, RegKey};
-
 lazy_static! {
     static ref OUTLOOK_EXE: Option<&'static str> = {
+        use winreg::{enums::HKEY_LOCAL_MACHINE, RegKey};
+
         const OUTLOOK_SUBKEY: &str =
             "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\OUTLOOK.EXE";
 
@@ -162,9 +162,9 @@ impl<'a> MessageBuilder<'a> {
 
     /// Adds an attachment to the email.
     ///
-    /// This should only be called once per `MessageBuilder` instance, as
-    /// Outlook's command-line switches only supports attaching a single
-    /// file per invocation.
+    /// This should only be called once per `MessageBuilder` instance,
+    /// because Outlook's command-line switches only supports attaching
+    /// a single file per invocation.
     #[inline]
     #[must_use]
     pub fn with_attachment<S>(self, file: S) -> Self
