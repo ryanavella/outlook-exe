@@ -16,7 +16,7 @@
 //!     .unwrap();
 //! ```
 
-use std::{borrow::Cow, io, process};
+use std::{io, process};
 
 #[macro_use]
 extern crate lazy_static;
@@ -40,29 +40,36 @@ lazy_static! {
     };
 }
 
-/// The `MessageBuilder` type, for drafting Outlook email messages.
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct MessageBuilder<'a> {
-    subj: Cow<'a, str>,
-    to: Vec<Cow<'a, str>>,
-    cc: Vec<Cow<'a, str>>,
-    bcc: Vec<Cow<'a, str>>,
-    body: Cow<'a, str>,
-    file: Cow<'a, str>,
+fn percent_escape(s: &str) -> String {
+    s.replace('%', "%25") // has to be first to avoid double-encoding '%'
+        .replace('"', "%22")
+        .replace('&', "%26")
+        .replace('?', "%3F")
 }
 
-impl<'a> MessageBuilder<'a> {
+/// The `MessageBuilder` type, for drafting Outlook email messages.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct MessageBuilder {
+    subj: String,
+    to: Vec<String>,
+    cc: Vec<String>,
+    bcc: Vec<String>,
+    body: String,
+    file: String,
+}
+
+impl MessageBuilder {
     /// Creates a new `MessageBuilder`.
     #[inline]
     #[must_use]
     pub const fn new() -> Self {
         Self {
-            subj: Cow::Owned(<str as ToOwned>::Owned::new()),
+            subj: String::new(),
             to: Vec::new(),
             cc: Vec::new(),
             bcc: Vec::new(),
-            body: Cow::Owned(<str as ToOwned>::Owned::new()),
-            file: Cow::Owned(<str as ToOwned>::Owned::new()),
+            body: String::new(),
+            file: String::new(),
         }
     }
 
@@ -73,7 +80,7 @@ impl<'a> MessageBuilder<'a> {
     #[must_use]
     pub fn with_subject<S>(self, subj: S) -> Self
     where
-        S: Into<Cow<'a, str>>,
+        S: Into<String>,
     {
         debug_assert!(self.subj.is_empty(), "Outlook subject already provided");
         Self {
@@ -91,7 +98,7 @@ impl<'a> MessageBuilder<'a> {
     #[must_use]
     pub fn with_recipient<S>(mut self, to: S) -> Self
     where
-        S: Into<Cow<'a, str>>,
+        S: Into<String>,
     {
         self.to.push(to.into());
         Self {
@@ -109,7 +116,7 @@ impl<'a> MessageBuilder<'a> {
     #[must_use]
     pub fn with_recipient_cc<S>(mut self, cc: S) -> Self
     where
-        S: Into<Cow<'a, str>>,
+        S: Into<String>,
     {
         self.cc.push(cc.into());
         Self {
@@ -127,7 +134,7 @@ impl<'a> MessageBuilder<'a> {
     #[must_use]
     pub fn with_recipient_bcc<S>(mut self, bcc: S) -> Self
     where
-        S: Into<Cow<'a, str>>,
+        S: Into<String>,
     {
         self.bcc.push(bcc.into());
         Self {
@@ -147,7 +154,7 @@ impl<'a> MessageBuilder<'a> {
     #[must_use]
     pub fn with_body<S>(self, body: S) -> Self
     where
-        S: Into<Cow<'a, str>>,
+        S: Into<String>,
     {
         debug_assert!(self.body.is_empty(), "Outlook body already provided");
         Self {
@@ -169,7 +176,7 @@ impl<'a> MessageBuilder<'a> {
     #[must_use]
     pub fn with_attachment<S>(self, file: S) -> Self
     where
-        S: Into<Cow<'a, str>>,
+        S: Into<String>,
     {
         debug_assert!(
             self.file.is_empty(),
@@ -191,40 +198,41 @@ impl<'a> MessageBuilder<'a> {
     ///
     /// Will return `Err(io::Error)` if OUTLOOK.EXE cannot
     /// be located, or if a child process cannot be spawned.
-    pub fn spawn(self) -> io::Result<process::Child> {
+    pub fn spawn(mut self) -> io::Result<process::Child> {
         let mut s = String::new();
-        s.push_str(&self.to.join(";"));
+        s.push_str(&percent_escape(&self.to.join(";")));
         if !self.cc.is_empty() {
             if !s.is_empty() {
                 s.push('&')
             }
             s.push_str("cc=");
-            s.push_str(&self.cc.join(";"));
+            s.push_str(&percent_escape(&self.cc.join(";")));
         }
         if !self.bcc.is_empty() {
             if !s.is_empty() {
                 s.push('&')
             }
             s.push_str("bcc=");
-            s.push_str(&self.bcc.join(";"));
+            s.push_str(&percent_escape(&self.bcc.join(";")));
         }
         if !self.subj.is_empty() {
             if !s.is_empty() {
                 s.push('&')
             }
             s.push_str("subject=");
-            s.push_str(&self.subj);
+            s.push_str(&percent_escape(&self.subj));
         }
         if !self.body.is_empty() {
             if !s.is_empty() {
                 s.push('&')
             }
             s.push_str("body=");
-            s.push_str(&self.body);
+            s.push_str(&percent_escape(&self.body));
         }
         let mut a = Vec::new();
         if !self.file.is_empty() {
             a.push("/a");
+            self.file = percent_escape(&self.file);
             a.push(&self.file);
         }
         let outlook_exe =
