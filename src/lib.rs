@@ -200,31 +200,35 @@ impl MessageBuilder {
     /// be located, or if a child process cannot be spawned.
     pub fn spawn(mut self) -> io::Result<process::Child> {
         let mut s = String::new();
+        let mut sep = '?';
         s.push_str(&percent_escape(&self.to.join(";")));
         if !self.cc.is_empty() {
             if !s.is_empty() {
-                s.push('&')
+                s.push(sep);
+                sep = '&';
             }
             s.push_str("cc=");
             s.push_str(&percent_escape(&self.cc.join(";")));
         }
         if !self.bcc.is_empty() {
             if !s.is_empty() {
-                s.push('&')
+                s.push(sep);
+                sep = '&';
             }
             s.push_str("bcc=");
             s.push_str(&percent_escape(&self.bcc.join(";")));
         }
         if !self.subj.is_empty() {
             if !s.is_empty() {
-                s.push('&')
+                s.push(sep);
+                sep = '&';                
             }
             s.push_str("subject=");
             s.push_str(&percent_escape(&self.subj));
         }
         if !self.body.is_empty() {
             if !s.is_empty() {
-                s.push('&')
+                s.push(sep);
             }
             s.push_str("body=");
             s.push_str(&percent_escape(&self.body));
